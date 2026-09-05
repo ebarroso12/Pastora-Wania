@@ -1,0 +1,56 @@
+# Ampliação Premium — Wânia Arantes
+
+- [x] Pesquisar as referências da Casa de Oração e da Impacto Rosa e extrair apenas diretrizes visuais e conteúdos públicos adequados.
+- [x] Definir o escopo seguro de respostas da assistente: mentoria, apresentação pastoral, conteúdos institucionais e encaminhamento para atendimento humano.
+- [x] Atualizar o projeto de estático para estrutura com suporte seguro a respostas de IA no servidor.
+- [x] Redesenhar a landing page com linguagem visual de luxo ministerial, maior profundidade editorial e novo conteúdo de autoridade pastoral.
+- [x] Implementar a assistente de dúvidas com base de conhecimento aprovada, limites temáticos e interface premium.
+- [x] Corrigir a infraestrutura fullstack pós-upgrade e comprovar build e inicialização do servidor sem erros.
+- [x] Aplicar e validar o redesign premium e o fluxo ponta a ponta da assistente em desktop e mobile.
+- [x] Salvar um novo checkpoint e entregar a versão revisada.
+- [x] Criar encarte premium da Pastora Wânia inspirado no post de referência indicado e entregar arquivo pronto para publicação.
+- [x] Refinar o encarte Jardim Rosa para uma atmosfera rosa clara, elegante e luminosa, com sensação de paz, fé e prosperidade.
+- [x] Substituir o retrato do encarte Jardim Rosa pela nova foto enviada e elevar o contraste de todos os textos essenciais.
+- [x] Refinar o encarte com olhos naturais e fidedignos à foto original da Pastora Wânia, além de uma mensagem mais emocional e atraente.
+- [x] Criar arte de lembrete premium para a véspera do Jardim Rosa com chamada elegante de urgência e dados essenciais do encontro.
+- [x] Pesquisar e documentar fontes oficiais ou públicas para referências bíblicas, Casa de Oração Franca e conteúdos de crescimento feminino cristão a serem usados pela assistente.
+- [x] Redefinir a identidade da landing page com paleta clara, narrativa pastoral empática e copy persuasiva orientada a acolhimento e transformação.
+- [x] Criar uma logomarca autoral clara, delicada, luxuosa e com presença de autoridade para Wânia Arantes.
+- [x] Ampliar a assistente para conversar sobre mentoria, fé, amadurecimento feminino e recursos selecionados, com limites de segurança e encaminhamentos apropriados.
+- [x] Validar visualmente a landing page e testar os fluxos essenciais da assistente antes de publicar a versão final.
+- [x] Incluir seção sobre casamento com foto do casal, narrativa pastoral responsável e novo acesso na navegação principal.
+- [x] Refinar a experiência visual para elevar luxo, autoridade e poder de conversão sem perder paleta clara e acolhimento.
+- [x] Ampliar a Assistente de Presença com orientação geral sobre casamento, recursos de fé e encaminhamentos de cuidado adequados.
+- [x] Validar a nova seção, o chat e a experiência responsiva antes de publicar a revisão final.
+- [x] Criar estrutura persistente e procedimento público para registrar interesses em mentoria de casais com validação e coleta mínima de dados.
+- [x] Integrar formulário premium de interesse para mentoria de casais à seção de casamento, com consentimento e confirmação de envio.
+- [x] Testar envio e responsividade do formulário antes de publicar a revisão final.
+- [x] Corrigir o envio do consentimento para refletir o estado real do formulário e reforçar a validação no cliente.
+- [x] Validar no navegador os estados de erro e de confirmação do formulário sem inserir dados de teste persistentes.
+- [x] Salvar a versão final do formulário de interesse para mentoria de casais sem novas mudanças de escopo.
+- [ ] Verificar a integração oficial disponível e desenhar uma agente de atendimento inicial para DMs do Instagram da Pastora Wânia, com limites pastorais e encaminhamento humano.
+- [x] Definir uma análise responsável de novos interesses em mentoria de casais e o formato do resumo acionável para a Pastora Wânia.
+- [x] Integrar o resumo de lead ao envio de notificação por e-mail após cada inscrição, com falha de notificação sem impedir o registro.
+- [x] Isolar exceções de notificação para que o cadastro já persistido nunca retorne erro ao visitante.
+- [x] Testar o fluxo de análise e notificação sem inserir dados pessoais reais.
+- [ ] Enviar a análise de cada novo lead para meularfelizoficial@gmail.com e edson.barroso@gmail.com.
+- [x] Acrescentar no rodapé o aplicativo Selaah com logomarca, link e explicação breve.
+- [x] Acrescentar o crédito do desenvolvedor Dr. Edson Barroso, Instagram, site e e-mail no rodapé.
+- [x] Validar os novos links, a exibição responsiva e o fluxo de análise por testes automatizados antes do checkpoint.
+- [x] Abrir e conferir no navegador os links do Selaah e dos créditos profissionais adicionados ao rodapé.
+- [x] Abrir no navegador o link de Instagram @dredsonbarroso incluído no rodapé.
+- [x] Acionar e conferir o comportamento do link de e-mail do rodapé, sem enviar mensagem.
+- [ ] Aguardar confirmação/configuração do provedor de envio de e-mail real antes de considerar a notificação externa concluída.
+- [ ] Ativar o envio externo pelo Gmail edson.barroso@gmail.com somente após a configuração voluntária de uma senha de aplicativo revogável; não usar senha normal do Gmail.
+- [ ] Conectar a conta Gmail edson.barroso@gmail.com por autorização segura para enviar automaticamente os resumos a meularfelizoficial@gmail.com e edson.barroso@gmail.com.
+- [ ] Validar o envio externo pelo Gmail conectado sem criar ou encaminhar um lead real.
+- [ ] Configurar um canal de envio próprio da aplicação para encaminhar imediatamente a análise de cada lead aos dois e-mails autorizados.
+- [ ] Concentrar os alertas de novos leads em majolicursos@gmail.com, preservando uma configuração segura de envio.
+- [ ] Criar painel administrativo protegido com visão de cliques, leads, conteúdo e ações operacionais.
+- [ ] Criar acesso administrativo inicial para edson.barroso@gmail.com, com senha inicial fora do código e troca obrigatória no primeiro acesso.
+- [ ] Permitir convites seguros para novos administradores e gestão de permissões no painel.
+- [ ] Permitir atualização rápida de textos, links e imagens com armazenamento seguro no painel.
+- [ ] Implementar métricas de cliques e indicadores de conversão sem armazenar dados de navegação desnecessários.
+- [ ] Preparar o repositório para sincronização com https://github.com/ebarroso12/Pastora-Wania.git.
+- [ ] Preparar a publicação na conta Vercel indicada, mantendo compatibilidade com a hospedagem atual.
+- [ ] Testar acesso administrativo, convite, conteúdo, leads, imagens, métricas e publicação externa antes de finalizar.
