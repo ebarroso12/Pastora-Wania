@@ -5,6 +5,6 @@
   "rewrites": [
     { "source": "/api/(.*)", "destination": "/api" },
     { "source": "/manus-storage/(.*)", "destination": "/api" },
-    { "source": "/((?!api/|manus-storage/).*)", "destination": "/index.html" }
+    { "source": "/((?!api|manus-storage).*)", "destination": "/index.html" }
   ]
 }
