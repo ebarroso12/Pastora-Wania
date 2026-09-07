@@ -264,7 +264,7 @@ export default function Home() {
             <p className="marriage-disclaimer">Em situações de violência, ameaça ou medo, a segurança vem primeiro: procure apoio imediato de pessoas de confiança e serviços especializados.</p>
           </div>
           <div className="marriage-visual reveal reveal-delay">
-            <div className="marriage-photo-frame"><img src="/images/wania-marcos-casal.jpg" alt="Wânia Arantes e Marcos Arantes em retrato de casal" /></div>
+            <div className="marriage-photo-frame"><img src="/images/wania-marcos-casal.jpg" alt="Wânia Arantes e Marcos Arantes em retrato de casal" loading="lazy" /></div>
             <div className="marriage-caption"><img src={MONOGRAM_URL} alt="" /><span>amor que escolhe<br />permanecer presente</span></div>
           </div>
         </div>
@@ -292,7 +292,7 @@ export default function Home() {
       <section id="presenca" className="faith-section" aria-labelledby="faith-title">
         <div className="faith-orb faith-orb-one" aria-hidden="true" />
         <div className="content-frame faith-grid">
-          <div className="faith-image reveal"><img src="/images/wania-retrato-fe.jpg" alt="Wânia Arantes em retrato elegante" /><div className="faith-image-caption"><img src={MONOGRAM_URL} alt="" /><span>fé que ampara<br />verdade que move</span></div></div>
+          <div className="faith-image reveal"><img src="/images/wania-retrato-fe.jpg" alt="Wânia Arantes em retrato elegante" loading="lazy" /><div className="faith-image-caption"><img src={MONOGRAM_URL} alt="" /><span>fé que ampara<br />verdade que move</span></div></div>
           <div className="faith-copy reveal reveal-delay">
             <p className="eyebrow"><span /> Pastoreio e propósito</p>
             <h2 id="faith-title">A fé não silencia a dor.<br /><em>Ela ajuda a atravessá-la.</em></h2>
@@ -332,7 +332,7 @@ export default function Home() {
       <section id="sobre" className="about-section" aria-labelledby="about-title">
         <div className="content-frame about-grid">
           <div className="about-copy reveal"><p className="eyebrow"><span /> Quem conduz esta jornada</p><h2 id="about-title">Wânia<br /><em>Arantes.</em></h2><p>Mentora, Coach Integral Sistêmica formada pela Febracis, Pastora e fundadora da Casa de Oração Franca. Sua missão é acompanhar mulheres que desejam romper ciclos, restaurar a identidade e se posicionar para construir a vida que desejam viver.</p><p>Seu olhar une firmeza e acolhimento: cada mulher traz uma história que merece ser tratada com respeito, escuta e responsabilidade.</p><div className="credential-line"><Check size={16} /> Formação em Coaching Integral Sistêmico — Febracis</div></div>
-          <div className="about-visual reveal reveal-delay"><div className="about-frame"><img src="/images/wania-retrato-sobre.jpg" alt="Wânia Arantes em retrato de estúdio" /></div><div className="about-emblem"><img src={MONOGRAM_URL} alt="" /><span>amor, verdade<br />e direção</span></div></div>
+          <div className="about-visual reveal reveal-delay"><div className="about-frame"><img src="/images/wania-retrato-sobre.jpg" alt="Wânia Arantes em retrato de estúdio" loading="lazy" /></div><div className="about-emblem"><img src={MONOGRAM_URL} alt="" /><span>amor, verdade<br />e direção</span></div></div>
         </div>
       </section>
 
