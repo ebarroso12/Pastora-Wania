@@ -11,7 +11,7 @@
     "format": "prettier --write .",
     "test": "vitest run",
     "db:push": "drizzle-kit generate && drizzle-kit migrate",
-    "build:api": "esbuild server/vercelApp.ts --bundle --platform=node --format=esm --packages=external --alias:@shared=./shared --outfile='api/[...path].js'"
+    "build:api": "esbuild server/vercelApp.ts --bundle --platform=node --format=esm --packages=external --alias:@shared=./shared --outfile=api/index.js"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.693.0",

@@ -111,6 +111,7 @@ export const appRouter = router({
         throw new TRPCError({ code: "TOO_MANY_REQUESTS", message: "Recebemos seu interesse. Aguarde antes de enviar novamente." });
       }
 
+      let savedToDb = false;
       try {
         await createCoupleMentoringInterest({
           fullName: input.fullName,
@@ -121,26 +122,33 @@ export const appRouter = router({
           journeyFocus: input.journeyFocus,
           consent: 1,
         });
-        try {
-          const notification = await notifyLeadTeam({
-            fullName: input.fullName,
-            partnerName: input.partnerName || null,
-            contactType: input.contactType,
-            contactValue: input.contactValue,
-            interestStage: input.interestStage,
-            journeyFocus: input.journeyFocus,
-          });
-          if (!notification.delivered) {
-            console.warn("[Couple Interest] Cadastro salvo, mas nenhuma notificação foi entregue.");
-          }
-        } catch (notificationError) {
-          console.warn("[Couple Interest] Cadastro salvo, mas ocorreu uma falha na notificação.", notificationError);
-        }
-        return { success: true } as const;
+        savedToDb = true;
       } catch (error) {
-        console.error("[Couple Interest] Submission failed", error);
+        console.warn("[Couple Interest] Não foi possível salvar no banco de dados; seguindo apenas com a notificação.", error);
+      }
+
+      let delivered = false;
+      try {
+        const notification = await notifyLeadTeam({
+          fullName: input.fullName,
+          partnerName: input.partnerName || null,
+          contactType: input.contactType,
+          contactValue: input.contactValue,
+          interestStage: input.interestStage,
+          journeyFocus: input.journeyFocus,
+        });
+        delivered = notification.delivered;
+        if (!delivered) {
+          console.warn("[Couple Interest] Nenhuma notificação foi entregue.");
+        }
+      } catch (notificationError) {
+        console.warn("[Couple Interest] Falha na notificação.", notificationError);
+      }
+
+      if (!savedToDb && !delivered) {
         throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Não foi possível registrar seu interesse agora. Tente novamente em alguns minutos." });
       }
+      return { success: true } as const;
     }),
   }),
 });

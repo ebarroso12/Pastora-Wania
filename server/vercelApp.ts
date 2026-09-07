@@ -14,7 +14,6 @@ import express from "express";
 import { createExpressMiddleware } from "@trpc/server/adapters/express";
 import { createContext } from "./_core/context";
 import { registerOAuthRoutes } from "./_core/oauth";
-import { registerStorageProxy } from "./_core/storageProxy";
 import { appRouter } from "./routers";
 
 const app = express();
@@ -22,20 +21,6 @@ const app = express();
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ limit: "10mb", extended: true }));
 
-/**
- * O proxy de imagens responde em `/manus-storage/*`, fora de `/api`.
- * O rewrite do vercel.json traz essas requisições para cá como
- * `/api/manus-storage/*`; aqui devolvemos a URL ao formato que o
- * `registerStorageProxy` já espera, sem alterar o código do servidor.
- */
-app.use((req, _res, next) => {
-  if (req.url.startsWith("/api/manus-storage/")) {
-    req.url = req.url.slice("/api".length);
-  }
-  next();
-});
-
-registerStorageProxy(app);
 registerOAuthRoutes(app);
 
 app.use(

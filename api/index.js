@@ -489,47 +489,6 @@ function registerOAuthRoutes(app2) {
   });
 }
 
-// server/_core/storageProxy.ts
-function registerStorageProxy(app2) {
-  app2.get("/manus-storage/*", async (req, res) => {
-    const key = req.params[0];
-    if (!key) {
-      res.status(400).send("Missing storage key");
-      return;
-    }
-    if (!ENV.forgeApiUrl || !ENV.forgeApiKey) {
-      res.status(500).send("Storage proxy not configured");
-      return;
-    }
-    try {
-      const forgeUrl = new URL(
-        "v1/storage/presign/get",
-        ENV.forgeApiUrl.replace(/\/+$/, "") + "/"
-      );
-      forgeUrl.searchParams.set("path", key);
-      const forgeResp = await fetch(forgeUrl, {
-        headers: { Authorization: `Bearer ${ENV.forgeApiKey}` }
-      });
-      if (!forgeResp.ok) {
-        const body = await forgeResp.text().catch(() => "");
-        console.error(`[StorageProxy] forge error: ${forgeResp.status} ${body}`);
-        res.status(502).send("Storage backend error");
-        return;
-      }
-      const { url } = await forgeResp.json();
-      if (!url) {
-        res.status(502).send("Empty signed URL from backend");
-        return;
-      }
-      res.set("Cache-Control", "no-store");
-      res.redirect(307, url);
-    } catch (err) {
-      console.error("[StorageProxy] failed:", err);
-      res.status(502).send("Storage proxy error");
-    }
-  });
-}
-
 // server/routers.ts
 import { TRPCError as TRPCError3 } from "@trpc/server";
 import { z as z2 } from "zod";
@@ -988,6 +947,7 @@ var appRouter = router({
       if (!consumeInterestRequest(visitorKey)) {
         throw new TRPCError3({ code: "TOO_MANY_REQUESTS", message: "Recebemos seu interesse. Aguarde antes de enviar novamente." });
       }
+      let savedToDb = false;
       try {
         await createCoupleMentoringInterest({
           fullName: input.fullName,
@@ -998,26 +958,31 @@ var appRouter = router({
           journeyFocus: input.journeyFocus,
           consent: 1
         });
-        try {
-          const notification = await notifyLeadTeam({
-            fullName: input.fullName,
-            partnerName: input.partnerName || null,
-            contactType: input.contactType,
-            contactValue: input.contactValue,
-            interestStage: input.interestStage,
-            journeyFocus: input.journeyFocus
-          });
-          if (!notification.delivered) {
-            console.warn("[Couple Interest] Cadastro salvo, mas nenhuma notifica\xE7\xE3o foi entregue.");
-          }
-        } catch (notificationError) {
-          console.warn("[Couple Interest] Cadastro salvo, mas ocorreu uma falha na notifica\xE7\xE3o.", notificationError);
-        }
-        return { success: true };
+        savedToDb = true;
       } catch (error) {
-        console.error("[Couple Interest] Submission failed", error);
+        console.warn("[Couple Interest] N\xE3o foi poss\xEDvel salvar no banco de dados; seguindo apenas com a notifica\xE7\xE3o.", error);
+      }
+      let delivered = false;
+      try {
+        const notification = await notifyLeadTeam({
+          fullName: input.fullName,
+          partnerName: input.partnerName || null,
+          contactType: input.contactType,
+          contactValue: input.contactValue,
+          interestStage: input.interestStage,
+          journeyFocus: input.journeyFocus
+        });
+        delivered = notification.delivered;
+        if (!delivered) {
+          console.warn("[Couple Interest] Nenhuma notifica\xE7\xE3o foi entregue.");
+        }
+      } catch (notificationError) {
+        console.warn("[Couple Interest] Falha na notifica\xE7\xE3o.", notificationError);
+      }
+      if (!savedToDb && !delivered) {
         throw new TRPCError3({ code: "INTERNAL_SERVER_ERROR", message: "N\xE3o foi poss\xEDvel registrar seu interesse agora. Tente novamente em alguns minutos." });
       }
+      return { success: true };
     })
   })
 });
@@ -1026,13 +991,6 @@ var appRouter = router({
 var app = express();
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ limit: "10mb", extended: true }));
-app.use((req, _res, next) => {
-  if (req.url.startsWith("/api/manus-storage/")) {
-    req.url = req.url.slice("/api".length);
-  }
-  next();
-});
-registerStorageProxy(app);
 registerOAuthRoutes(app);
 app.use(
   "/api/trpc",
