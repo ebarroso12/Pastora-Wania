@@ -51,7 +51,7 @@ export function hasGmailAppPassword(value = process.env.GMAIL_SMTP_APP_PASSWORD)
   return typeof value === "string" && value.trim().length > 0;
 }
 
-async function sendWithGmail(content: string): Promise<boolean> {
+async function sendWithGmail(subject: string, content: string): Promise<boolean> {
   const appPassword = process.env.GMAIL_SMTP_APP_PASSWORD?.trim();
   if (!hasGmailAppPassword(appPassword)) return false;
 
@@ -66,7 +66,7 @@ async function sendWithGmail(content: string): Promise<boolean> {
     await transport.sendMail({
       from: `Wânia Arantes — Mentoria <${GMAIL_SENDER}>`,
       to: RECIPIENTS.join(", "),
-      subject: "Novo interesse | Mentoria de Casais — Wânia Arantes",
+      subject,
       text: content,
     });
     return true;
@@ -84,12 +84,67 @@ export async function notifyLeadTeam(
   input: LeadNotificationInput
 ): Promise<{ channel: "email" | "internal" | "unavailable"; delivered: boolean }> {
   const content = formatLeadNotification(input);
-  if (await sendWithGmail(content)) {
+  if (await sendWithGmail("Novo interesse | Mentoria de Casais — Wânia Arantes", content)) {
     return { channel: "email", delivered: true };
   }
 
   const internalDelivered = await notifyOwner({
     title: "Novo interesse — Mentoria de Casais",
+    content,
+  });
+  return {
+    channel: internalDelivered ? "internal" : "unavailable",
+    delivered: internalDelivered,
+  };
+}
+
+const FRAGMENTED_AREA_LABELS = {
+  emotional: "Emocional",
+  relationships: "Relacionamentos",
+  family: "Família",
+  professional: "Profissional",
+  prosperity: "Prosperidade",
+  purpose: "Propósito",
+  faith: "Fé",
+} as const;
+
+const CURRENT_MOMENT_LABELS = {
+  understand_method: "Quer entender melhor o Método ÁGUIA e a Mentoria INTEIRA",
+  ready_to_start: "Sente que está pronta para começar",
+  still_evaluating: "Ainda está avaliando se este é o momento certo",
+} as const;
+
+export type InteraEvaluationForNotification = {
+  fullName: string;
+  contactType: "whatsapp" | "email";
+  contactValue: string;
+  fragmentedArea: keyof typeof FRAGMENTED_AREA_LABELS;
+  currentMoment: keyof typeof CURRENT_MOMENT_LABELS;
+};
+
+export function formatInteraEvaluationNotification(input: InteraEvaluationForNotification): string {
+  const contactLabel = input.contactType === "whatsapp" ? "WhatsApp" : "E-mail";
+
+  return `NOVA SOLICITAÇÃO — AVALIAÇÃO INTEIRA (Método ÁGUIA)
+
+Lead: ${input.fullName.trim()}
+Canal preferido: ${contactLabel} — ${input.contactValue.trim()}
+Área que ela sente mais fragmentada: ${FRAGMENTED_AREA_LABELS[input.fragmentedArea]}
+Momento declarado: ${CURRENT_MOMENT_LABELS[input.currentMoment]}
+
+Nota de cuidado: esta leitura usa somente as escolhas declaradas no formulário. Não é diagnóstico e não substitui escuta humana ou suporte especializado quando necessário.`;
+}
+
+export async function notifyInteraEvaluationTeam(
+  input: InteraEvaluationForNotification
+): Promise<{ channel: "email" | "internal" | "unavailable"; delivered: boolean }> {
+  const content = formatInteraEvaluationNotification(input);
+  if (await sendWithGmail("Nova Avaliação INTEIRA solicitada — Wânia Arantes", content)) {
+    return { channel: "email", delivered: true };
+  }
+
+  const internalDelivered = await notifyOwner({
+    title: "Nova solicitação — Avaliação INTEIRA",
     content,
   });
   return {

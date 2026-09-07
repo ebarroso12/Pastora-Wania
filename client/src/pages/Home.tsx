@@ -39,9 +39,21 @@ const areas = [
 ];
 
 const steps = [
-  ["01", "Nomear", "Há dores que ficam silenciosas porque você aprendeu a funcionar mesmo cansada. Aqui, elas encontram nome e escuta."],
-  ["02", "Discernir", "Olhamos para padrões, crenças e escolhas com verdade — sem rótulos, culpa ou pressa."],
-  ["03", "Reposicionar", "Clareza ganha forma em decisões mais coerentes com a mulher que você está se tornando."],
+  ["01", "Reconhecer", "Há dores que ficam silenciosas porque você aprendeu a funcionar mesmo cansada. Aqui, elas encontram nome, escuta e espaço para serem tratadas na raiz."],
+  ["02", "Reposicionar", "Fortalecemos identidade e devolvemos a você o governo da própria vida — novos limites, decisões e escolhas coerentes com quem você está se tornando."],
+  ["03", "Construir", "Essa nova consciência ganha direção: uma vida construída com propósito, e não apenas sustentada no automático."],
+];
+
+type FragmentedArea = "emotional" | "relationships" | "family" | "professional" | "prosperity" | "purpose" | "faith";
+
+const fragmentedAreas: Array<[FragmentedArea, string]> = [
+  ["emotional", "Emocional"],
+  ["relationships", "Relacionamentos"],
+  ["family", "Família"],
+  ["professional", "Profissional"],
+  ["prosperity", "Prosperidade"],
+  ["purpose", "Propósito"],
+  ["faith", "Fé"],
 ];
 
 const resources = [
@@ -68,9 +80,9 @@ const resources = [
   },
 ];
 
-function InstagramCta({ className = "", label = "Conversar sobre a mentoria" }: { className?: string; label?: string }) {
+function EvaluationCta({ className = "", label = "Solicite sua Avaliação INTEIRA" }: { className?: string; label?: string }) {
   return (
-    <a className={`primary-cta ${className}`} href={INSTAGRAM_URL} target="_blank" rel="noreferrer">
+    <a className={`primary-cta ${className}`} href="#avaliacao-inteira">
       <span>{label}</span>
       <ArrowUpRight size={18} strokeWidth={1.7} aria-hidden="true" />
     </a>
@@ -93,6 +105,17 @@ export default function Home() {
   const [coupleFormMessage, setCoupleFormMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
   const [coupleFormErrors, setCoupleFormErrors] = useState<Record<string, string>>({});
 
+  const [evaluationForm, setEvaluationForm] = useState({
+    fullName: "",
+    contactType: "whatsapp" as "whatsapp" | "email",
+    contactValue: "",
+    fragmentedArea: "emotional" as FragmentedArea,
+    currentMoment: "still_evaluating" as "understand_method" | "ready_to_start" | "still_evaluating",
+    consent: false,
+  });
+  const [evaluationFormMessage, setEvaluationFormMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
+  const [evaluationFormErrors, setEvaluationFormErrors] = useState<Record<string, string>>({});
+
   const assistantMutation = trpc.assistant.ask.useMutation({
     onSuccess: ({ answer }) => setMessages(current => [...current, { role: "assistant", content: answer }]),
     onError: () => setMessages(current => [
@@ -110,6 +133,14 @@ export default function Home() {
       setCoupleForm(current => ({ ...current, fullName: "", partnerName: "", contactValue: "", consent: false }));
     },
     onError: error => setCoupleFormMessage({ type: "error", text: error.message || "Não foi possível registrar seu interesse agora. Tente novamente em alguns minutos." }),
+  });
+
+  const evaluationMutation = trpc.interaEvaluation.submit.useMutation({
+    onSuccess: () => {
+      setEvaluationFormMessage({ type: "success", text: "Recebemos sua solicitação de Avaliação INTEIRA. A equipe entrará em contato pelo canal informado." });
+      setEvaluationForm(current => ({ ...current, fullName: "", contactValue: "", consent: false }));
+    },
+    onError: error => setEvaluationFormMessage({ type: "error", text: error.message || "Não foi possível registrar sua solicitação agora. Tente novamente em alguns minutos." }),
   });
 
   const closeMenu = () => setMenuOpen(false);
@@ -146,6 +177,29 @@ export default function Home() {
       consent: coupleForm.consent,
     });
   };
+  const submitEvaluation = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setEvaluationFormMessage(null);
+    const errors: Record<string, string> = {};
+    if (evaluationForm.fullName.trim().length < 2) errors.fullName = "Informe seu nome para continuar.";
+    const contactDigits = evaluationForm.contactValue.replace(/\D/g, "");
+    if (evaluationForm.contactType === "whatsapp" && contactDigits.length < 10) errors.contactValue = "Informe um WhatsApp válido com DDD.";
+    if (evaluationForm.contactType === "email" && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(evaluationForm.contactValue)) errors.contactValue = "Informe um e-mail válido.";
+    if (!evaluationForm.consent) errors.consent = "Autorize o contato da equipe para enviar sua solicitação.";
+    if (Object.keys(errors).length) {
+      setEvaluationFormErrors(errors);
+      return;
+    }
+    setEvaluationFormErrors({});
+    evaluationMutation.mutate({
+      fullName: evaluationForm.fullName,
+      contactType: evaluationForm.contactType,
+      contactValue: evaluationForm.contactValue,
+      fragmentedArea: evaluationForm.fragmentedArea,
+      currentMoment: evaluationForm.currentMoment,
+      consent: evaluationForm.consent,
+    });
+  };
 
   return (
     <main className="site-shell">
@@ -157,7 +211,7 @@ export default function Home() {
           </a>
 
           <nav className="desktop-nav" aria-label="Navegação principal">
-            <a href="#mentoria">A jornada</a>
+            <a href="#mentoria">Método ÁGUIA</a>
             <a href="#casamento">Casamento</a>
             <a href="#presenca">Fé e presença</a>
             <a href="#recursos">Recursos</a>
@@ -173,7 +227,7 @@ export default function Home() {
         </div>
 
         <nav className={`mobile-menu ${menuOpen ? "is-open" : ""}`} aria-label="Navegação móvel">
-          <a href="#mentoria" onClick={closeMenu}>A jornada</a>
+          <a href="#mentoria" onClick={closeMenu}>Método ÁGUIA</a>
           <a href="#casamento" onClick={closeMenu}>Casamento</a>
           <a href="#presenca" onClick={closeMenu}>Fé e presença</a>
           <a href="#recursos" onClick={closeMenu}>Recursos</a>
@@ -189,12 +243,12 @@ export default function Home() {
         <div className="hero-ribbon" aria-hidden="true" />
         <div className="content-frame hero-grid">
           <div className="hero-copy reveal">
-            <p className="eyebrow"><span /> Mentoria · Fé · Propósito</p>
-            <p className="hero-kicker"><HeartHandshake size={15} aria-hidden="true" /> Uma conversa que começa com cuidado</p>
+            <p className="eyebrow"><span /> Mentoria INTEIRA · Método ÁGUIA</p>
+            <p className="hero-kicker"><HeartHandshake size={15} aria-hidden="true" /> Uma jornada para mulheres que decidiram não viver mais fragmentadas</p>
             <h1>Você não precisa <em>carregar tudo</em> sozinha.</h1>
-            <p className="hero-lead">Talvez por fora você continue forte. Mas, por dentro, existam dores, ciclos e escolhas pedindo atenção. Há um caminho para voltar a se reconhecer — com clareza, fé e presença.</p>
+            <p className="hero-lead">Talvez por fora você continue forte. Mas, por dentro, existam áreas da sua vida desconectadas, pedindo atenção. A Mentoria INTEIRA conduz você de volta à sua própria vida — inteira, completa e sem falta de nada.</p>
             <div className="hero-actions">
-              <InstagramCta label="Quero conversar sobre a mentoria" />
+              <EvaluationCta />
               <button type="button" className="subtle-cta" onClick={openAssistant}>Antes, quero perguntar <ArrowUpRight size={16} /></button>
             </div>
             <div className="hero-credentials">
@@ -216,10 +270,10 @@ export default function Home() {
         <div className="content-frame pain-grid">
           <p className="chapter-label">Um lugar de acolhimento <span>—</span> sem disfarces</p>
           <div className="pain-main">
-            <h2 id="pain-title">Você se tornou a pessoa que sustenta tudo.<br /><em>Mas quem sustenta você?</em></h2>
+            <h2 id="pain-title">Você aprendeu a sustentar muita coisa.<br /><em>Agora precisa aprender a não se perder enquanto sustenta.</em></h2>
             <div className="pain-copy">
-              <p>Quando a vida exige demais, é comum ir se deixando para depois. Você cuida, resolve, sorri, trabalha e continua. Só que algumas feridas não desaparecem apenas porque você se acostumou a não falar delas.</p>
-              <p>Esta mentoria nasce para a mulher que deseja interromper o automático e abrir, com amor e verdade, espaço para uma nova forma de viver.</p>
+              <p>Você pode ter família, trabalho, fé e até reconhecimento — e ainda perceber que existem áreas da sua vida desconectadas. Cuida de todos, mas negligencia a si mesma. Tem força para sustentar muita coisa, mas nem sempre clareza para conduzir a própria vida.</p>
+              <p>A Mentoria INTEIRA nasce para a mulher que decidiu não viver mais fragmentada entre quem é, o que carrega e a vida que foi chamada para construir.</p>
             </div>
           </div>
         </div>
@@ -228,10 +282,10 @@ export default function Home() {
       <section id="mentoria" className="mentoring-section" aria-labelledby="mentoring-title">
         <div className="content-frame mentoring-intro">
           <div className="section-heading reveal">
-            <p className="eyebrow"><span /> A jornada de mentoria</p>
-            <h2 id="mentoring-title">Não é sobre se tornar outra pessoa.<br /><em>É sobre voltar para si.</em></h2>
+            <p className="eyebrow"><span /> Método ÁGUIA · Mentoria INTEIRA</p>
+            <h2 id="mentoring-title">Você não precisa se tornar outra mulher.<br /><em>Precisa voltar a ser inteira.</em></h2>
           </div>
-          <p className="section-aside reveal reveal-delay">Uma jornada integral para perceber o que hoje limita a sua vida, fortalecer a sua identidade e construir escolhas alinhadas com a mulher e a história que você quer honrar.</p>
+          <p className="section-aside reveal reveal-delay">O Método ÁGUIA organiza a transformação de dentro para fora: reconhecer o que hoje limita a sua vida, reposicionar identidade e governo pessoal, e construir uma direção coerente com a mulher que você é chamada a ser.</p>
         </div>
 
         <div className="content-frame steps-grid">
@@ -241,10 +295,29 @@ export default function Home() {
         </div>
 
         <div className="content-frame whole-woman">
-          <div className="whole-woman-title"><p className="chapter-label">A mulher por inteiro</p><h3>Porque não adianta prosperar em uma área quando outra está pedindo <em>presença.</em></h3></div>
+          <div className="whole-woman-title"><p className="chapter-label">INTEIRA. Completa. E sem falta de nada.</p><h3>Porque não adianta prosperar em uma área quando outra está pedindo <em>presença.</em></h3></div>
           <div className="area-list">
             {areas.map(([number, title, text]) => <article className="area-item" key={number}><span className="area-number">{number}</span><div><h4>{title}</h4><p>{text}</p></div><ArrowUpRight size={17} aria-hidden="true" /></article>)}
           </div>
+        </div>
+
+        <div id="avaliacao-inteira" className="content-frame evaluation-form-wrap reveal">
+          <div className="evaluation-form-intro">
+            <p className="eyebrow"><span /> Avaliação INTEIRA</p>
+            <h3>Solicite sua <em>Avaliação INTEIRA.</em></h3>
+            <p>A avaliação identifica onde você está, quais áreas estão fragmentadas e se a Mentoria INTEIRA é o próximo passo adequado para você agora.</p>
+            <p className="evaluation-form-discretion"><ShieldCheck size={15} /> Não compartilhe questões íntimas ou detalhes sensíveis neste formulário.</p>
+          </div>
+          <form className="evaluation-form" onSubmit={submitEvaluation} noValidate>
+            <div className="form-field form-field-wide"><label htmlFor="evaluation-name">Seu nome</label><input id="evaluation-name" value={evaluationForm.fullName} onChange={event => { setEvaluationForm(current => ({ ...current, fullName: event.target.value })); setEvaluationFormErrors(current => ({ ...current, fullName: "" })); }} placeholder="Como podemos chamar você?" autoComplete="name" aria-invalid={Boolean(evaluationFormErrors.fullName)} required />{evaluationFormErrors.fullName && <p className="form-error">{evaluationFormErrors.fullName}</p>}</div>
+            <fieldset className="form-field"><legend>Como prefere receber retorno?</legend><div className="choice-row"><label><input type="radio" name="evaluation-contact-type" checked={evaluationForm.contactType === "whatsapp"} onChange={() => setEvaluationForm(current => ({ ...current, contactType: "whatsapp", contactValue: "" }))} /> WhatsApp</label><label><input type="radio" name="evaluation-contact-type" checked={evaluationForm.contactType === "email"} onChange={() => setEvaluationForm(current => ({ ...current, contactType: "email", contactValue: "" }))} /> E-mail</label></div></fieldset>
+            <div className="form-field"><label htmlFor="evaluation-contact-value">{evaluationForm.contactType === "whatsapp" ? "Seu WhatsApp com DDD" : "Seu melhor e-mail"}</label><input id="evaluation-contact-value" value={evaluationForm.contactValue} onChange={event => { setEvaluationForm(current => ({ ...current, contactValue: event.target.value })); setEvaluationFormErrors(current => ({ ...current, contactValue: "" })); }} placeholder={evaluationForm.contactType === "whatsapp" ? "(00) 00000-0000" : "voce@email.com"} autoComplete={evaluationForm.contactType === "whatsapp" ? "tel" : "email"} inputMode={evaluationForm.contactType === "whatsapp" ? "tel" : "email"} aria-invalid={Boolean(evaluationFormErrors.contactValue)} required />{evaluationFormErrors.contactValue && <p className="form-error">{evaluationFormErrors.contactValue}</p>}</div>
+            <div className="form-field form-field-wide"><label htmlFor="evaluation-area">Em qual área você sente que está apenas sobrevivendo?</label><select id="evaluation-area" value={evaluationForm.fragmentedArea} onChange={event => setEvaluationForm(current => ({ ...current, fragmentedArea: event.target.value as FragmentedArea }))}>{fragmentedAreas.map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></div>
+            <div className="form-field form-field-wide"><label htmlFor="evaluation-moment">Qual é o seu momento agora?</label><select id="evaluation-moment" value={evaluationForm.currentMoment} onChange={event => setEvaluationForm(current => ({ ...current, currentMoment: event.target.value as "understand_method" | "ready_to_start" | "still_evaluating" }))}><option value="still_evaluating">Ainda estou avaliando se é o momento certo</option><option value="understand_method">Quero entender melhor o Método ÁGUIA</option><option value="ready_to_start">Sinto que estou pronta para começar</option></select><p className="form-field-note">Essa escolha orienta o primeiro contato da equipe. Não compartilhe detalhes íntimos.</p></div>
+            <label className="consent-field form-field-wide"><input type="checkbox" checked={evaluationForm.consent} onChange={event => { setEvaluationForm(current => ({ ...current, consent: event.target.checked })); setEvaluationFormErrors(current => ({ ...current, consent: "" })); }} aria-invalid={Boolean(evaluationFormErrors.consent)} required /><span>Autorizo a equipe da Wânia Arantes a entrar em contato exclusivamente sobre minha Avaliação INTEIRA.</span></label>
+            {evaluationFormErrors.consent && <p className="form-error form-field-wide">{evaluationFormErrors.consent}</p>}
+            <div className="form-submit-row form-field-wide"><button type="submit" disabled={evaluationMutation.isPending}>{evaluationMutation.isPending ? "Enviando solicitação..." : "Solicitar minha Avaliação INTEIRA"}<ArrowUpRight size={17} /></button>{evaluationFormMessage && <p className={`form-feedback is-${evaluationFormMessage.type}`} role="status">{evaluationFormMessage.text}</p>}</div>
+          </form>
         </div>
       </section>
 
@@ -342,13 +415,13 @@ export default function Home() {
           <img src={MONOGRAM_URL} alt="" className="final-monogram" />
           <p className="chapter-label">O seu próximo capítulo <span>—</span> pode começar aqui</p>
           <h2 id="final-title">Você não precisa esperar a vida mudar para começar a <em>se escolher.</em></h2>
-          <p>Há uma mulher dentro de você que não precisa ser inventada — apenas reencontrada. Se algo nesta conversa tocou você, talvez seja o momento de dar um próximo passo com presença.</p>
-          <InstagramCta className="final-cta" label="Iniciar uma conversa" />
+          <p>Há uma mulher dentro de você que não precisa ser inventada — apenas reencontrada. Se algo nesta conversa tocou você, talvez seja o momento de solicitar sua Avaliação INTEIRA.</p>
+          <EvaluationCta className="final-cta" />
           <a className="instagram-handle" href={INSTAGRAM_URL} target="_blank" rel="noreferrer"><Instagram size={16} /> @apwaniaarantes</a>
         </div>
       </section>
 
-      <footer className="site-footer"><div className="content-frame footer-inner"><a href="#inicio" className="footer-brand"><img src={MONOGRAM_URL} alt="" /><span>Wânia Arantes</span></a><section className="footer-selaah" aria-label="Aplicativo Selaah"><a href={SELAAH_URL} target="_blank" rel="noreferrer"><img src={SELAAH_LOGO_URL} alt="Logomarca do aplicativo Selaah" /><span><small>Aplicativo de fé</small><strong>SELAH</strong></span><ArrowUpRight size={14} aria-hidden="true" /></a><p>Uma pausa para orar e crescer com presença.</p></section><section className="footer-developer" aria-label="Créditos de desenvolvimento"><p>Desenvolvido por <strong>Dr. Edson Barroso</strong></p><div><a href={DEVELOPER_INSTAGRAM_URL} target="_blank" rel="noreferrer">@dredsonbarroso</a><a href={DEVELOPER_SITE_URL} target="_blank" rel="noreferrer">www.dredsonbarroso.com.br</a><a href={DEVELOPER_EMAIL_URL}>edson.barroso@gmail.com</a></div></section><a className="footer-instagram" href={INSTAGRAM_URL} target="_blank" rel="noreferrer" aria-label="Instagram da Wânia Arantes"><Instagram size={18} /></a></div><div className="content-frame footer-copyright"><span>© {new Date().getFullYear()} Wânia Arantes. Todos os direitos reservados.</span><span>Mentoria, fé e propósito para mulheres.</span></div></footer>
+      <footer className="site-footer"><div className="content-frame footer-inner"><a href="#inicio" className="footer-brand"><img src={MONOGRAM_URL} alt="" /><span>Wânia Arantes</span></a><section className="footer-selaah" aria-label="Aplicativo Selaah"><a href={SELAAH_URL} target="_blank" rel="noreferrer"><img src={SELAAH_LOGO_URL} alt="Logomarca do aplicativo Selaah" /><span><small>Aplicativo de fé</small><strong>SELAH</strong></span><ArrowUpRight size={14} aria-hidden="true" /></a><p>Uma pausa para orar e crescer com presença.</p></section><section className="footer-developer" aria-label="Créditos de desenvolvimento"><p>Desenvolvido por <strong>Dr. Edson Barroso</strong></p><div><a href={DEVELOPER_INSTAGRAM_URL} target="_blank" rel="noreferrer">@dredsonbarroso</a><a href={DEVELOPER_SITE_URL} target="_blank" rel="noreferrer">www.dredsonbarroso.com.br</a><a href={DEVELOPER_EMAIL_URL}>edson.barroso@gmail.com</a></div></section><a className="footer-instagram" href={INSTAGRAM_URL} target="_blank" rel="noreferrer" aria-label="Instagram da Wânia Arantes"><Instagram size={18} /></a></div><div className="content-frame footer-copyright"><span>© {new Date().getFullYear()} Wânia Arantes. Todos os direitos reservados.</span><span>Mentoria INTEIRA · Método ÁGUIA.</span></div></footer>
 
       <button type="button" className="assistant-fab" aria-label="Abrir assistente de presença" onClick={openAssistant}><Sparkles size={19} /><span>Fale com a assistente</span></button>
 

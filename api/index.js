@@ -73,6 +73,24 @@ var coupleMentoringInterests = mysqlTable("coupleMentoringInterests", {
   consent: int("consent").notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull()
 });
+var interaEvaluationRequests = mysqlTable("interaEvaluationRequests", {
+  id: int("id").autoincrement().primaryKey(),
+  fullName: varchar("fullName", { length: 120 }).notNull(),
+  contactType: mysqlEnum("contactType", ["whatsapp", "email"]).notNull(),
+  contactValue: varchar("contactValue", { length: 320 }).notNull(),
+  fragmentedArea: mysqlEnum("fragmentedArea", [
+    "emotional",
+    "relationships",
+    "family",
+    "professional",
+    "prosperity",
+    "purpose",
+    "faith"
+  ]).notNull(),
+  currentMoment: mysqlEnum("currentMoment", ["understand_method", "ready_to_start", "still_evaluating"]).default("still_evaluating").notNull(),
+  consent: int("consent").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull()
+});
 
 // server/_core/env.ts
 var ENV = {
@@ -160,6 +178,11 @@ async function createCoupleMentoringInterest(input) {
   const db = await getDb();
   if (!db) throw new Error("Banco de dados indispon\xEDvel");
   await db.insert(coupleMentoringInterests).values(input);
+}
+async function createInteraEvaluationRequest(input) {
+  const db = await getDb();
+  if (!db) throw new Error("Banco de dados indispon\xEDvel");
+  await db.insert(interaEvaluationRequests).values(input);
 }
 
 // server/_core/sdk.ts
@@ -809,7 +832,7 @@ var GMAIL_SENDER = "edson.barroso@gmail.com";
 function hasGmailAppPassword(value = process.env.GMAIL_SMTP_APP_PASSWORD) {
   return typeof value === "string" && value.trim().length > 0;
 }
-async function sendWithGmail(content) {
+async function sendWithGmail(subject, content) {
   const appPassword = process.env.GMAIL_SMTP_APP_PASSWORD?.trim();
   if (!hasGmailAppPassword(appPassword)) return false;
   try {
@@ -823,7 +846,7 @@ async function sendWithGmail(content) {
     await transport.sendMail({
       from: `W\xE2nia Arantes \u2014 Mentoria <${GMAIL_SENDER}>`,
       to: RECIPIENTS.join(", "),
-      subject: "Novo interesse | Mentoria de Casais \u2014 W\xE2nia Arantes",
+      subject,
       text: content
     });
     return true;
@@ -834,11 +857,50 @@ async function sendWithGmail(content) {
 }
 async function notifyLeadTeam(input) {
   const content = formatLeadNotification(input);
-  if (await sendWithGmail(content)) {
+  if (await sendWithGmail("Novo interesse | Mentoria de Casais \u2014 W\xE2nia Arantes", content)) {
     return { channel: "email", delivered: true };
   }
   const internalDelivered = await notifyOwner({
     title: "Novo interesse \u2014 Mentoria de Casais",
+    content
+  });
+  return {
+    channel: internalDelivered ? "internal" : "unavailable",
+    delivered: internalDelivered
+  };
+}
+var FRAGMENTED_AREA_LABELS = {
+  emotional: "Emocional",
+  relationships: "Relacionamentos",
+  family: "Fam\xEDlia",
+  professional: "Profissional",
+  prosperity: "Prosperidade",
+  purpose: "Prop\xF3sito",
+  faith: "F\xE9"
+};
+var CURRENT_MOMENT_LABELS = {
+  understand_method: "Quer entender melhor o M\xE9todo \xC1GUIA e a Mentoria INTEIRA",
+  ready_to_start: "Sente que est\xE1 pronta para come\xE7ar",
+  still_evaluating: "Ainda est\xE1 avaliando se este \xE9 o momento certo"
+};
+function formatInteraEvaluationNotification(input) {
+  const contactLabel = input.contactType === "whatsapp" ? "WhatsApp" : "E-mail";
+  return `NOVA SOLICITA\xC7\xC3O \u2014 AVALIA\xC7\xC3O INTEIRA (M\xE9todo \xC1GUIA)
+
+Lead: ${input.fullName.trim()}
+Canal preferido: ${contactLabel} \u2014 ${input.contactValue.trim()}
+\xC1rea que ela sente mais fragmentada: ${FRAGMENTED_AREA_LABELS[input.fragmentedArea]}
+Momento declarado: ${CURRENT_MOMENT_LABELS[input.currentMoment]}
+
+Nota de cuidado: esta leitura usa somente as escolhas declaradas no formul\xE1rio. N\xE3o \xE9 diagn\xF3stico e n\xE3o substitui escuta humana ou suporte especializado quando necess\xE1rio.`;
+}
+async function notifyInteraEvaluationTeam(input) {
+  const content = formatInteraEvaluationNotification(input);
+  if (await sendWithGmail("Nova Avalia\xE7\xE3o INTEIRA solicitada \u2014 W\xE2nia Arantes", content)) {
+    return { channel: "email", delivered: true };
+  }
+  const internalDelivered = await notifyOwner({
+    title: "Nova solicita\xE7\xE3o \u2014 Avalia\xE7\xE3o INTEIRA",
     content
   });
   return {
@@ -862,6 +924,24 @@ var ASSISTANT_MAX_REQUESTS = 8;
 var interestRequests = /* @__PURE__ */ new Map();
 var INTEREST_WINDOW_MS = 60 * 60 * 1e3;
 var INTEREST_MAX_REQUESTS = 3;
+var evaluationRequests = /* @__PURE__ */ new Map();
+var EVALUATION_WINDOW_MS = 60 * 60 * 1e3;
+var EVALUATION_MAX_REQUESTS = 3;
+var interaEvaluationInput = z2.object({
+  fullName: z2.string().trim().min(2, "Informe seu nome.").max(120),
+  contactType: z2.enum(["whatsapp", "email"]),
+  contactValue: z2.string().trim().min(5).max(320),
+  fragmentedArea: z2.enum(["emotional", "relationships", "family", "professional", "prosperity", "purpose", "faith"]),
+  currentMoment: z2.enum(["understand_method", "ready_to_start", "still_evaluating"]),
+  consent: z2.boolean().refine((value) => value, { message: "\xC9 necess\xE1rio autorizar o contato da equipe." })
+}).superRefine((value, context) => {
+  if (value.contactType === "email" && !z2.string().email().safeParse(value.contactValue).success) {
+    context.addIssue({ code: "custom", path: ["contactValue"], message: "Informe um e-mail v\xE1lido." });
+  }
+  if (value.contactType === "whatsapp" && value.contactValue.replace(/\D/g, "").length < 10) {
+    context.addIssue({ code: "custom", path: ["contactValue"], message: "Informe um WhatsApp v\xE1lido com DDD." });
+  }
+});
 var coupleInterestInput = z2.object({
   fullName: z2.string().trim().min(2, "Informe seu nome.").max(120),
   partnerName: z2.string().trim().max(120).optional(),
@@ -893,16 +973,22 @@ function consumeAssistantRequest(visitorKey) {
   current.count += 1;
   return true;
 }
-function consumeInterestRequest(visitorKey) {
+function consumeRateLimit(store, visitorKey, windowMs, maxRequests) {
   const now = Date.now();
-  const current = interestRequests.get(visitorKey);
+  const current = store.get(visitorKey);
   if (!current || current.resetAt <= now) {
-    interestRequests.set(visitorKey, { count: 1, resetAt: now + INTEREST_WINDOW_MS });
+    store.set(visitorKey, { count: 1, resetAt: now + windowMs });
     return true;
   }
-  if (current.count >= INTEREST_MAX_REQUESTS) return false;
+  if (current.count >= maxRequests) return false;
   current.count += 1;
   return true;
+}
+function consumeInterestRequest(visitorKey) {
+  return consumeRateLimit(interestRequests, visitorKey, INTEREST_WINDOW_MS, INTEREST_MAX_REQUESTS);
+}
+function consumeEvaluationRequest(visitorKey) {
+  return consumeRateLimit(evaluationRequests, visitorKey, EVALUATION_WINDOW_MS, EVALUATION_MAX_REQUESTS);
 }
 var appRouter = router({
   system: systemRouter,
@@ -981,6 +1067,48 @@ var appRouter = router({
       }
       if (!savedToDb && !delivered) {
         throw new TRPCError3({ code: "INTERNAL_SERVER_ERROR", message: "N\xE3o foi poss\xEDvel registrar seu interesse agora. Tente novamente em alguns minutos." });
+      }
+      return { success: true };
+    })
+  }),
+  interaEvaluation: router({
+    submit: publicProcedure.input(interaEvaluationInput).mutation(async ({ ctx, input }) => {
+      const visitorKey = getVisitorKey(ctx.req.headers["x-forwarded-for"]);
+      if (!consumeEvaluationRequest(visitorKey)) {
+        throw new TRPCError3({ code: "TOO_MANY_REQUESTS", message: "Recebemos sua solicita\xE7\xE3o. Aguarde antes de enviar novamente." });
+      }
+      let savedToDb = false;
+      try {
+        await createInteraEvaluationRequest({
+          fullName: input.fullName,
+          contactType: input.contactType,
+          contactValue: input.contactValue,
+          fragmentedArea: input.fragmentedArea,
+          currentMoment: input.currentMoment,
+          consent: 1
+        });
+        savedToDb = true;
+      } catch (error) {
+        console.warn("[Intera Evaluation] N\xE3o foi poss\xEDvel salvar no banco de dados; seguindo apenas com a notifica\xE7\xE3o.", error);
+      }
+      let delivered = false;
+      try {
+        const notification = await notifyInteraEvaluationTeam({
+          fullName: input.fullName,
+          contactType: input.contactType,
+          contactValue: input.contactValue,
+          fragmentedArea: input.fragmentedArea,
+          currentMoment: input.currentMoment
+        });
+        delivered = notification.delivered;
+        if (!delivered) {
+          console.warn("[Intera Evaluation] Nenhuma notifica\xE7\xE3o foi entregue.");
+        }
+      } catch (notificationError) {
+        console.warn("[Intera Evaluation] Falha na notifica\xE7\xE3o.", notificationError);
+      }
+      if (!savedToDb && !delivered) {
+        throw new TRPCError3({ code: "INTERNAL_SERVER_ERROR", message: "N\xE3o foi poss\xEDvel registrar sua solicita\xE7\xE3o agora. Tente novamente em alguns minutos." });
       }
       return { success: true };
     })

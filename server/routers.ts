@@ -5,8 +5,8 @@ import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
 import { publicProcedure, router } from "./_core/trpc";
 import { askMentoringAssistant, isWithinAssistantScope } from "./mentoringAssistant";
-import { createCoupleMentoringInterest } from "./db";
-import { notifyLeadTeam } from "./leadNotification";
+import { createCoupleMentoringInterest, createInteraEvaluationRequest } from "./db";
+import { notifyInteraEvaluationTeam, notifyLeadTeam } from "./leadNotification";
 import { getAdminBootstrapStatus } from "./adminBootstrap";
 
 const assistantRequests = new Map<string, { count: number; resetAt: number }>();
@@ -15,6 +15,25 @@ const ASSISTANT_MAX_REQUESTS = 8;
 const interestRequests = new Map<string, { count: number; resetAt: number }>();
 const INTEREST_WINDOW_MS = 60 * 60 * 1000;
 const INTEREST_MAX_REQUESTS = 3;
+const evaluationRequests = new Map<string, { count: number; resetAt: number }>();
+const EVALUATION_WINDOW_MS = 60 * 60 * 1000;
+const EVALUATION_MAX_REQUESTS = 3;
+
+export const interaEvaluationInput = z.object({
+  fullName: z.string().trim().min(2, "Informe seu nome.").max(120),
+  contactType: z.enum(["whatsapp", "email"]),
+  contactValue: z.string().trim().min(5).max(320),
+  fragmentedArea: z.enum(["emotional", "relationships", "family", "professional", "prosperity", "purpose", "faith"]),
+  currentMoment: z.enum(["understand_method", "ready_to_start", "still_evaluating"]),
+  consent: z.boolean().refine(value => value, { message: "É necessário autorizar o contato da equipe." }),
+}).superRefine((value, context) => {
+  if (value.contactType === "email" && !z.string().email().safeParse(value.contactValue).success) {
+    context.addIssue({ code: "custom", path: ["contactValue"], message: "Informe um e-mail válido." });
+  }
+  if (value.contactType === "whatsapp" && value.contactValue.replace(/\D/g, "").length < 10) {
+    context.addIssue({ code: "custom", path: ["contactValue"], message: "Informe um WhatsApp válido com DDD." });
+  }
+});
 
 export const coupleInterestInput = z.object({
   fullName: z.string().trim().min(2, "Informe seu nome.").max(120),
@@ -51,16 +70,24 @@ function consumeAssistantRequest(visitorKey: string) {
   return true;
 }
 
-function consumeInterestRequest(visitorKey: string) {
+function consumeRateLimit(store: Map<string, { count: number; resetAt: number }>, visitorKey: string, windowMs: number, maxRequests: number) {
   const now = Date.now();
-  const current = interestRequests.get(visitorKey);
+  const current = store.get(visitorKey);
   if (!current || current.resetAt <= now) {
-    interestRequests.set(visitorKey, { count: 1, resetAt: now + INTEREST_WINDOW_MS });
+    store.set(visitorKey, { count: 1, resetAt: now + windowMs });
     return true;
   }
-  if (current.count >= INTEREST_MAX_REQUESTS) return false;
+  if (current.count >= maxRequests) return false;
   current.count += 1;
   return true;
+}
+
+function consumeInterestRequest(visitorKey: string) {
+  return consumeRateLimit(interestRequests, visitorKey, INTEREST_WINDOW_MS, INTEREST_MAX_REQUESTS);
+}
+
+function consumeEvaluationRequest(visitorKey: string) {
+  return consumeRateLimit(evaluationRequests, visitorKey, EVALUATION_WINDOW_MS, EVALUATION_MAX_REQUESTS);
 }
 
 export const appRouter = router({
@@ -147,6 +174,51 @@ export const appRouter = router({
 
       if (!savedToDb && !delivered) {
         throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Não foi possível registrar seu interesse agora. Tente novamente em alguns minutos." });
+      }
+      return { success: true } as const;
+    }),
+  }),
+  interaEvaluation: router({
+    submit: publicProcedure.input(interaEvaluationInput).mutation(async ({ ctx, input }) => {
+      const visitorKey = getVisitorKey(ctx.req.headers["x-forwarded-for"]);
+      if (!consumeEvaluationRequest(visitorKey)) {
+        throw new TRPCError({ code: "TOO_MANY_REQUESTS", message: "Recebemos sua solicitação. Aguarde antes de enviar novamente." });
+      }
+
+      let savedToDb = false;
+      try {
+        await createInteraEvaluationRequest({
+          fullName: input.fullName,
+          contactType: input.contactType,
+          contactValue: input.contactValue,
+          fragmentedArea: input.fragmentedArea,
+          currentMoment: input.currentMoment,
+          consent: 1,
+        });
+        savedToDb = true;
+      } catch (error) {
+        console.warn("[Intera Evaluation] Não foi possível salvar no banco de dados; seguindo apenas com a notificação.", error);
+      }
+
+      let delivered = false;
+      try {
+        const notification = await notifyInteraEvaluationTeam({
+          fullName: input.fullName,
+          contactType: input.contactType,
+          contactValue: input.contactValue,
+          fragmentedArea: input.fragmentedArea,
+          currentMoment: input.currentMoment,
+        });
+        delivered = notification.delivered;
+        if (!delivered) {
+          console.warn("[Intera Evaluation] Nenhuma notificação foi entregue.");
+        }
+      } catch (notificationError) {
+        console.warn("[Intera Evaluation] Falha na notificação.", notificationError);
+      }
+
+      if (!savedToDb && !delivered) {
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Não foi possível registrar sua solicitação agora. Tente novamente em alguns minutos." });
       }
       return { success: true } as const;
     }),

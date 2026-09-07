@@ -1,6 +1,6 @@
 import { eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { coupleMentoringInterests, InsertCoupleMentoringInterest, InsertUser, users } from "../drizzle/schema";
+import { coupleMentoringInterests, InsertCoupleMentoringInterest, InsertInteraEvaluationRequest, InsertUser, interaEvaluationRequests, users } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -93,4 +93,10 @@ export async function createCoupleMentoringInterest(input: InsertCoupleMentoring
   const db = await getDb();
   if (!db) throw new Error("Banco de dados indisponível");
   await db.insert(coupleMentoringInterests).values(input);
+}
+
+export async function createInteraEvaluationRequest(input: InsertInteraEvaluationRequest): Promise<void> {
+  const db = await getDb();
+  if (!db) throw new Error("Banco de dados indisponível");
+  await db.insert(interaEvaluationRequests).values(input);
 }

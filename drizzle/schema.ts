@@ -40,3 +40,26 @@ export const coupleMentoringInterests = mysqlTable("coupleMentoringInterests", {
 
 export type CoupleMentoringInterest = typeof coupleMentoringInterests.$inferSelect;
 export type InsertCoupleMentoringInterest = typeof coupleMentoringInterests.$inferInsert;
+
+/** Pedidos de Avaliação INTEIRA enviados pelo formulário da Mentoria INTEIRA (Método ÁGUIA). */
+export const interaEvaluationRequests = mysqlTable("interaEvaluationRequests", {
+  id: int("id").autoincrement().primaryKey(),
+  fullName: varchar("fullName", { length: 120 }).notNull(),
+  contactType: mysqlEnum("contactType", ["whatsapp", "email"]).notNull(),
+  contactValue: varchar("contactValue", { length: 320 }).notNull(),
+  fragmentedArea: mysqlEnum("fragmentedArea", [
+    "emotional",
+    "relationships",
+    "family",
+    "professional",
+    "prosperity",
+    "purpose",
+    "faith",
+  ]).notNull(),
+  currentMoment: mysqlEnum("currentMoment", ["understand_method", "ready_to_start", "still_evaluating"]).default("still_evaluating").notNull(),
+  consent: int("consent").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type InteraEvaluationRequest = typeof interaEvaluationRequests.$inferSelect;
+export type InsertInteraEvaluationRequest = typeof interaEvaluationRequests.$inferInsert;
