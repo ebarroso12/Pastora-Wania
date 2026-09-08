@@ -1,64 +1,99 @@
-import { int, mysqlEnum, mysqlTable, text, timestamp, varchar } from "drizzle-orm/mysql-core";
+import { integer, pgEnum, pgTable, serial, text, timestamp, varchar } from "drizzle-orm/pg-core";
 
 /**
- * Core user table backing auth flow.
- * Extend this file with additional tables as your product grows.
- * Columns use camelCase to match both database fields and generated types.
+ * Esquema em PostgreSQL.
+ *
+ * O projeto nasceu na infraestrutura do Manus, que servia MySQL. Fora dali o
+ * banco passou a ser Postgres (Supabase), então os tipos mudaram:
+ *   mysqlTable  -> pgTable
+ *   int().autoincrement().primaryKey() -> serial().primaryKey()
+ *   mysqlEnum inline -> pgEnum, que no Postgres é um tipo nomeado do banco
+ *
+ * Em MySQL cada enum vive dentro da coluna. No Postgres o enum é um tipo do
+ * schema, com nome único no banco inteiro — por isso `contactType`, usado nas
+ * duas tabelas de formulário, é declarado uma vez só e reaproveitado.
  */
-export const users = mysqlTable("users", {
-  /**
-   * Surrogate primary key. Auto-incremented numeric value managed by the database.
-   * Use this for relations between tables.
-   */
-  id: int("id").autoincrement().primaryKey(),
-  /** Manus OAuth identifier (openId) returned from the OAuth callback. Unique per user. */
+
+export const roleEnum = pgEnum("role", ["user", "admin"]);
+export const contactTypeEnum = pgEnum("contactType", ["whatsapp", "email"]);
+export const interestStageEnum = pgEnum("interestStage", ["know_more", "talk_to_team"]);
+export const journeyFocusEnum = pgEnum("journeyFocus", [
+  "understand_fit",
+  "restore_dialogue",
+  "renew_connection",
+  "align_direction",
+]);
+export const fragmentedAreaEnum = pgEnum("fragmentedArea", [
+  "emotional",
+  "relationships",
+  "family",
+  "professional",
+  "prosperity",
+  "purpose",
+  "faith",
+]);
+export const currentMomentEnum = pgEnum("currentMoment", [
+  "understand_method",
+  "ready_to_start",
+  "still_evaluating",
+]);
+
+/**
+ * Tabela de usuários do fluxo de autenticação.
+ * Os nomes das colunas seguem camelCase, iguais aos do código.
+ */
+export const users = pgTable("users", {
+  /** Chave primária numérica, gerada pelo banco. */
+  id: serial("id").primaryKey(),
+  /** Identificador do OAuth (openId) devolvido no callback. Único por usuário. */
   openId: varchar("openId", { length: 64 }).notNull().unique(),
   name: text("name"),
   email: varchar("email", { length: 320 }),
   loginMethod: varchar("loginMethod", { length: 64 }),
-  role: mysqlEnum("role", ["user", "admin"]).default("user").notNull(),
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
-  lastSignedIn: timestamp("lastSignedIn").defaultNow().notNull(),
+  role: roleEnum("role").default("user").notNull(),
+  createdAt: timestamp("createdAt", { withTimezone: true }).defaultNow().notNull(),
+  /**
+   * O Postgres não tem ON UPDATE CURRENT_TIMESTAMP como o MySQL: lá isso é
+   * feito por trigger. Como só existe um ponto de escrita (upsertUser), o
+   * carimbo fica a cargo do Drizzle, via $onUpdate.
+   */
+  updatedAt: timestamp("updatedAt", { withTimezone: true })
+    .defaultNow()
+    .notNull()
+    .$onUpdate(() => new Date()),
+  lastSignedIn: timestamp("lastSignedIn", { withTimezone: true }).defaultNow().notNull(),
 });
 
 export type User = typeof users.$inferSelect;
 export type InsertUser = typeof users.$inferInsert;
 
 /** Interesses públicos enviados pelo formulário de mentoria de casais. */
-export const coupleMentoringInterests = mysqlTable("coupleMentoringInterests", {
-  id: int("id").autoincrement().primaryKey(),
+export const coupleMentoringInterests = pgTable("coupleMentoringInterests", {
+  id: serial("id").primaryKey(),
   fullName: varchar("fullName", { length: 120 }).notNull(),
   partnerName: varchar("partnerName", { length: 120 }),
-  contactType: mysqlEnum("contactType", ["whatsapp", "email"]).notNull(),
+  contactType: contactTypeEnum("contactType").notNull(),
   contactValue: varchar("contactValue", { length: 320 }).notNull(),
-  interestStage: mysqlEnum("interestStage", ["know_more", "talk_to_team"]).notNull(),
-  journeyFocus: mysqlEnum("journeyFocus", ["understand_fit", "restore_dialogue", "renew_connection", "align_direction"]).default("understand_fit").notNull(),
-  consent: int("consent").notNull(),
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  interestStage: interestStageEnum("interestStage").notNull(),
+  journeyFocus: journeyFocusEnum("journeyFocus").default("understand_fit").notNull(),
+  /** 1 = autorizou o contato. Mantido como inteiro, igual ao que o router envia. */
+  consent: integer("consent").notNull(),
+  createdAt: timestamp("createdAt", { withTimezone: true }).defaultNow().notNull(),
 });
 
 export type CoupleMentoringInterest = typeof coupleMentoringInterests.$inferSelect;
 export type InsertCoupleMentoringInterest = typeof coupleMentoringInterests.$inferInsert;
 
 /** Pedidos de Avaliação INTEIRA enviados pelo formulário da Mentoria INTEIRA (Método ÁGUIA). */
-export const interaEvaluationRequests = mysqlTable("interaEvaluationRequests", {
-  id: int("id").autoincrement().primaryKey(),
+export const interaEvaluationRequests = pgTable("interaEvaluationRequests", {
+  id: serial("id").primaryKey(),
   fullName: varchar("fullName", { length: 120 }).notNull(),
-  contactType: mysqlEnum("contactType", ["whatsapp", "email"]).notNull(),
+  contactType: contactTypeEnum("contactType").notNull(),
   contactValue: varchar("contactValue", { length: 320 }).notNull(),
-  fragmentedArea: mysqlEnum("fragmentedArea", [
-    "emotional",
-    "relationships",
-    "family",
-    "professional",
-    "prosperity",
-    "purpose",
-    "faith",
-  ]).notNull(),
-  currentMoment: mysqlEnum("currentMoment", ["understand_method", "ready_to_start", "still_evaluating"]).default("still_evaluating").notNull(),
-  consent: int("consent").notNull(),
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  fragmentedArea: fragmentedAreaEnum("fragmentedArea").notNull(),
+  currentMoment: currentMomentEnum("currentMoment").default("still_evaluating").notNull(),
+  consent: integer("consent").notNull(),
+  createdAt: timestamp("createdAt", { withTimezone: true }).defaultNow().notNull(),
 });
 
 export type InteraEvaluationRequest = typeof interaEvaluationRequests.$inferSelect;

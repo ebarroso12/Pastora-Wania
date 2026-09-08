@@ -1,17 +1,40 @@
 import { eq } from "drizzle-orm";
-import { drizzle } from "drizzle-orm/mysql2";
+import { drizzle } from "drizzle-orm/postgres-js";
+import postgres from "postgres";
 import { coupleMentoringInterests, InsertCoupleMentoringInterest, InsertInteraEvaluationRequest, InsertUser, interaEvaluationRequests, users } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
+let _client: ReturnType<typeof postgres> | null = null;
 
-// Lazily create the drizzle instance so local tooling can run without a DB.
+/**
+ * Conexão com o Postgres (Supabase).
+ *
+ * A API roda como função serverless na Vercel: cada requisição pode subir uma
+ * instância nova, e cada instância abriria a própria conexão. Por isso a
+ * DATABASE_URL deve apontar para o **pooler de transação** do Supabase
+ * (Supavisor, porta 6543) e não para a conexão direta (5432) — senão o limite
+ * de conexões do Postgres estoura assim que houver acesso simultâneo.
+ *
+ * Duas consequências dessa escolha, ambas tratadas aqui:
+ *   prepare:false — em modo de transação o pooler não garante que a próxima
+ *                   consulta caia na mesma sessão, então prepared statements
+ *                   nomeados quebram;
+ *   max:1         — uma conexão por instância; quem multiplexa é o pooler.
+ */
 export async function getDb() {
   if (!_db && process.env.DATABASE_URL) {
     try {
-      _db = drizzle(process.env.DATABASE_URL);
+      _client = postgres(process.env.DATABASE_URL, {
+        prepare: false,
+        max: 1,
+        idle_timeout: 20,
+        connect_timeout: 10,
+      });
+      _db = drizzle(_client);
     } catch (error) {
       console.warn("[Database] Failed to connect:", error);
+      _client = null;
       _db = null;
     }
   }
@@ -68,7 +91,10 @@ export async function upsertUser(user: InsertUser): Promise<void> {
       updateSet.lastSignedIn = new Date();
     }
 
-    await db.insert(users).values(values).onDuplicateKeyUpdate({
+    // MySQL: ON DUPLICATE KEY UPDATE. Postgres: ON CONFLICT, e aqui o alvo
+    // precisa ser dito explicitamente — a coluna única openId.
+    await db.insert(users).values(values).onConflictDoUpdate({
+      target: users.openId,
       set: updateSet,
     });
   } catch (error) {
