@@ -196,3 +196,73 @@ h1 em,h2 em,h3 em { color:var(--rose); font-style:italic; }
 @media (display-mode:standalone) {
   .hero-section { padding-top:max(69px, env(safe-area-inset-top)); }
 }
+
+/* ==========================================================================
+   MARCA OFICIAL — Wânia Arantes
+   Substitui o monograma provisório pela logomarca da mentora.
+   O símbolo (águia + monograma WA) tem proporção 2,28:1; as caixas antigas
+   eram quadradas, então aqui a largura manda e a altura acompanha, com
+   object-fit:contain, para nenhuma versão sair achatada.
+   Contraste escolhido por local:
+     · dourada  -> creme (#fffaf7 / #fffdfb), rosé (#f8ebe7) e o avatar rosado
+     · branca   -> azul da seção de fechamento (assinatura completa)
+   ========================================================================== */
+.brand-mark,
+.hero-seal img,
+.marriage-caption img,
+.faith-image-caption img,
+.about-emblem img,
+.assistant-avatar img,
+.footer-brand img,
+.final-monogram {
+  height:auto;
+  flex:none;
+  object-fit:contain;
+}
+
+.brand-mark              { width:48px; }
+.hero-seal img           { width:52px; margin-bottom:7px; }
+.marriage-caption img    { width:50px; margin-bottom:8px; }
+.faith-image-caption img { width:49px; margin-bottom:7px; }
+.about-emblem img        { width:50px; margin-bottom:8px; }
+.footer-brand img        { width:42px; }
+
+/* o avatar da assistente é um disco pequeno: ganha alguns pixels para a
+   marca caber sem virar borrão */
+.assistant-avatar        { width:44px; height:44px; }
+.assistant-avatar img    { width:32px; }
+
+/* fechamento: a assinatura completa em branco sobre o azul.
+   O filtro antigo (brightness(0) invert(1)) clareava um PNG escuro —
+   o arquivo agora já é claro, então o filtro sai. */
+.final-monogram {
+  width:clamp(178px,25vw,246px);
+  margin-bottom:26px;
+  filter:none;
+}
+
+@media (max-width:900px) {
+  .hero-seal img,
+  .marriage-caption img,
+  .faith-image-caption img,
+  .about-emblem img      { width:46px; margin-bottom:6px; }
+}
+
+@media (max-width:680px) {
+  .brand-mark            { width:42px; }
+  .hero-seal img         { width:44px; margin-bottom:5px; }
+  .marriage-caption img,
+  .faith-image-caption img,
+  .about-emblem img      { width:44px; margin-bottom:6px; }
+  .footer-brand img      { width:38px; }
+  .assistant-avatar      { width:40px; height:40px; }
+  .assistant-avatar img  { width:29px; }
+  .final-monogram        { width:min(70vw,208px); margin-bottom:20px; }
+}
+
+@media (max-width:380px) {
+  .hero-seal img         { width:40px; }
+  .marriage-caption img,
+  .faith-image-caption img,
+  .about-emblem img      { width:40px; margin-bottom:5px; }
+}

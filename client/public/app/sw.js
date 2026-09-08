@@ -6,7 +6,7 @@
  * Estratégia: rede primeiro, cache como rede de segurança. Nada de
  * cache agressivo, para que uma publicação nova apareça na hora.
  */
-const CACHE = "wania-v1";
+const CACHE = "wania-v2";
 const CASCA = ["/", "/app/icone-192.png", "/app/icone-512.png"];
 
 self.addEventListener("install", event => {

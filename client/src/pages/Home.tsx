@@ -21,7 +21,9 @@ import {
 
 const INSTAGRAM_URL = "https://www.instagram.com/apwaniaarantes/";
 const CASA_ORACAO_URL = "https://casadeoracao.com.br/sobre-nos/";
-const MONOGRAM_URL = "/images/wania-monogram.svg";
+// Marca oficial. O simbolo (aguia + monograma WA) tem proporcao 2,28:1.
+const MONOGRAM_URL = "/marca/simbolo-ouro.png";        // fundos claros
+const LOCKUP_LIGHT_URL = "/marca/logo-branco.png";     // assinatura sobre o azul
 const SELAAH_URL = "https://www.selaah.com.br/bem-vindo";
 const SELAAH_LOGO_URL = "/images/selaah-mark.svg";
 const DEVELOPER_INSTAGRAM_URL = "https://www.instagram.com/dredsonbarroso/";
@@ -412,7 +414,7 @@ export default function Home() {
       <section id="contato" className="final-section" aria-labelledby="final-title">
         <div className="final-rings" aria-hidden="true" />
         <div className="content-frame final-content reveal">
-          <img src={MONOGRAM_URL} alt="" className="final-monogram" />
+          <img src={LOCKUP_LIGHT_URL} alt="Wânia Arantes — Mentora de Mulheres" className="final-monogram" />
           <p className="chapter-label">O seu próximo capítulo <span>—</span> pode começar aqui</p>
           <h2 id="final-title">Você não precisa esperar a vida mudar para começar a <em>se escolher.</em></h2>
           <p>Há uma mulher dentro de você que não precisa ser inventada — apenas reencontrada. Se algo nesta conversa tocou você, talvez seja o momento de solicitar sua Avaliação INTEIRA.</p>
