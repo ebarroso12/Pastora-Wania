@@ -22,7 +22,7 @@ import {
 const INSTAGRAM_URL = "https://www.instagram.com/apwaniaarantes/";
 const CASA_ORACAO_URL = "https://casadeoracao.com.br/sobre-nos/";
 const MONOGRAM_URL = "/images/wania-monogram.svg";
-const SELAAH_URL = "https://www.selaah.com.br/home";
+const SELAAH_URL = "https://www.selaah.com.br/bem-vindo";
 const SELAAH_LOGO_URL = "/images/selaah-mark.svg";
 const DEVELOPER_INSTAGRAM_URL = "https://www.instagram.com/dredsonbarroso/";
 const DEVELOPER_SITE_URL = "https://www.dredsonbarroso.com.br/";
@@ -421,7 +421,7 @@ export default function Home() {
         </div>
       </section>
 
-      <footer className="site-footer"><div className="content-frame footer-inner"><a href="#inicio" className="footer-brand"><img src={MONOGRAM_URL} alt="" /><span>Wânia Arantes</span></a><section className="footer-selaah" aria-label="Aplicativo Selaah"><a href={SELAAH_URL} target="_blank" rel="noreferrer"><img src={SELAAH_LOGO_URL} alt="Logomarca do aplicativo Selaah" /><span><small>Aplicativo de fé</small><strong>SELAH</strong></span><ArrowUpRight size={14} aria-hidden="true" /></a><p>Uma pausa para orar e crescer com presença.</p></section><section className="footer-developer" aria-label="Créditos de desenvolvimento"><p>Desenvolvido por <strong>Dr. Edson Barroso</strong></p><div><a href={DEVELOPER_INSTAGRAM_URL} target="_blank" rel="noreferrer">@dredsonbarroso</a><a href={DEVELOPER_SITE_URL} target="_blank" rel="noreferrer">www.dredsonbarroso.com.br</a><a href={DEVELOPER_EMAIL_URL}>edson.barroso@gmail.com</a></div></section><a className="footer-instagram" href={INSTAGRAM_URL} target="_blank" rel="noreferrer" aria-label="Instagram da Wânia Arantes"><Instagram size={18} /></a></div><div className="content-frame footer-copyright"><span>© {new Date().getFullYear()} Wânia Arantes. Todos os direitos reservados.</span><span>Mentoria INTEIRA · Método ÁGUIA.</span></div></footer>
+      <footer className="site-footer"><div className="content-frame footer-inner"><a href="#inicio" className="footer-brand"><img src={MONOGRAM_URL} alt="" /><span>Wânia Arantes</span></a><section className="footer-selaah" aria-label="Aplicativo Selaah"><a href={SELAAH_URL} target="_blank" rel="noreferrer"><img src={SELAAH_LOGO_URL} alt="Logomarca do aplicativo Selaah" /><span><small>Aplicativo devocional</small><strong>SELAH</strong></span><ArrowUpRight size={14} aria-hidden="true" /></a><p>Pause · Ore · Cresça — o espaço devocional da Casa de Oração.</p></section><section className="footer-developer" aria-label="Créditos de desenvolvimento"><p>Desenvolvido por <strong>Dr. Edson Barroso</strong></p><div><a href={DEVELOPER_INSTAGRAM_URL} target="_blank" rel="noreferrer">@dredsonbarroso</a><a href={DEVELOPER_SITE_URL} target="_blank" rel="noreferrer">www.dredsonbarroso.com.br</a><a href={DEVELOPER_EMAIL_URL}>edson.barroso@gmail.com</a></div></section><a className="footer-instagram" href={INSTAGRAM_URL} target="_blank" rel="noreferrer" aria-label="Instagram da Wânia Arantes"><Instagram size={18} /></a></div><div className="content-frame footer-copyright"><span>© {new Date().getFullYear()} Wânia Arantes. Todos os direitos reservados.</span><span>Mentoria INTEIRA · Método ÁGUIA.</span></div></footer>
 
       <button type="button" className="assistant-fab" aria-label="Abrir assistente de presença" onClick={openAssistant}><Sparkles size={19} /><span>Fale com a assistente</span></button>
 
