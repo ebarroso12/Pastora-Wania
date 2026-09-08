@@ -150,10 +150,19 @@ function vitePluginManusDebugCollector(): Plugin {
   };
 }
 
-const plugins = [react(), tailwindcss(), jsxLocPlugin(), vitePluginManusRuntime(), vitePluginManusDebugCollector()];
+/**
+ * As tres ferramentas do Manus — runtime do editor, marcacao de origem no JSX
+ * e coletor de log — so servem dentro daquela plataforma.
+ *
+ * O runtime era o mais caro: injetava 367 KB de JavaScript inline dentro do
+ * index.html, incluindo uma segunda copia inteira do React, baixados e
+ * interpretados em toda visita antes de a pagina aparecer. O site nao usa nada
+ * disso. Agora ficam so no servidor de desenvolvimento.
+ */
+const pluginsDoManus = [jsxLocPlugin(), vitePluginManusRuntime(), vitePluginManusDebugCollector()];
 
-export default defineConfig({
-  plugins,
+export default defineConfig(({ command }) => ({
+  plugins: command === "serve" ? [react(), tailwindcss(), ...pluginsDoManus] : [react(), tailwindcss()],
   resolve: {
     alias: {
       "@": path.resolve(import.meta.dirname, "client", "src"),
@@ -184,4 +193,4 @@ export default defineConfig({
       deny: ["**/.*"],
     },
   },
-});
+}));
