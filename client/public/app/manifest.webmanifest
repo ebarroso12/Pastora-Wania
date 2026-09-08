@@ -1,0 +1,24 @@
+{
+  "name": "Wânia Arantes — Mentoria INTEIRA · Método ÁGUIA",
+  "short_name": "Wânia Arantes",
+  "description": "Uma jornada para mulheres que decidiram não viver mais fragmentadas entre quem são, o que carregam e a vida que foram chamadas para construir.",
+  "lang": "pt-BR",
+  "dir": "ltr",
+  "id": "/",
+  "start_url": "/?fonte=app",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#fffaf7",
+  "theme_color": "#10284d",
+  "categories": ["lifestyle", "education", "health"],
+  "icons": [
+    { "src": "/app/icone-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/app/icone-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/app/icone-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "Falar com a assistente", "short_name": "Assistente", "url": "/?fonte=app#assistente" },
+    { "name": "Mentoria para casais", "short_name": "Casais", "url": "/?fonte=app#interesse-casais" }
+  ]
+}

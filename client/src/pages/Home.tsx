@@ -388,7 +388,7 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="assistant-section" aria-labelledby="assistant-section-title">
+      <section id="assistente" className="assistant-section" aria-labelledby="assistant-section-title">
         <div className="content-frame assistant-layout">
           <div className="assistant-copy reveal"><p className="eyebrow"><span /> Assistente de presença</p><h2 id="assistant-section-title">Talvez a sua primeira decisão seja<br /><em>simplesmente perguntar.</em></h2><p>Uma conversa inicial para quem quer entender a mentoria, buscar uma oração breve, refletir sobre vínculos, encontrar um versículo para recomeçar ou conhecer mensagens e canais oficiais da Casa de Oração.</p><button className="light-cta" type="button" onClick={openAssistant}>Abrir a assistente <Sparkles size={18} /></button></div>
           <div className="assistant-preview reveal reveal-delay">

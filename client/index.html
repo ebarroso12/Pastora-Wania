@@ -2,15 +2,45 @@
 <html lang="pt-BR">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
-    <meta name="theme-color" content="#fffaf7" />
+    <!-- viewport-fit=cover respeita o entalhe do iPhone; o zoom fica liberado por acessibilidade -->
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" media="(prefers-color-scheme: light)" content="#fffaf7" />
+    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#10284d" />
     <meta name="description" content="Mentoria INTEIRA — Método ÁGUIA, por Wânia Arantes. Uma jornada para mulheres que decidiram não viver mais fragmentadas entre quem são, o que carregam e a vida que foram chamadas para construir." />
+
     <link rel="icon" type="image/svg+xml" href="/images/wania-monogram.svg" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/app/favicon-32.png" />
+    <link rel="icon" type="image/png" sizes="64x64" href="/app/favicon-64.png" />
+
+    <!-- instalação como aplicativo -->
+    <link rel="manifest" href="/app/manifest.webmanifest" />
+    <link rel="apple-touch-icon" href="/app/icone-apple-180.png" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Wânia Arantes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:locale" content="pt_BR" />
+    <meta property="og:title" content="Wânia Arantes | Mentoria INTEIRA · Método ÁGUIA" />
+    <meta property="og:description" content="Uma jornada para mulheres que decidiram não viver mais fragmentadas entre quem são, o que carregam e a vida que foram chamadas para construir." />
+    <meta property="og:image" content="/images/wania-retrato-hero.jpg" />
+    <meta name="twitter:card" content="summary_large_image" />
+
     <title>Wânia Arantes | Mentoria INTEIRA · Método ÁGUIA</title>
   </head>
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
     <script defer src="%VITE_ANALYTICS_ENDPOINT%/umami" data-website-id="%VITE_ANALYTICS_WEBSITE_ID%"></script>
+    <script>
+      if ("serviceWorker" in navigator) {
+        window.addEventListener("load", function () {
+          navigator.serviceWorker.register("/app/sw.js").catch(function () {
+            /* sem service worker o site continua funcionando normalmente */
+          });
+        });
+      }
+    </script>
   </body>
 </html>
